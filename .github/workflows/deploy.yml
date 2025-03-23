@@ -24,7 +24,6 @@ jobs:
             cd /root/uiblocks-backend
 
             git pull https://x-access-token:${{ secrets.GH_PAT }}@github.com/theshreyanshsingh/uiblocks-backend.git
-
             npm install
 
             pm2 stop uiblocks-backend
