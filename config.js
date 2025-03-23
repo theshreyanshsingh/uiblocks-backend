@@ -7,5 +7,6 @@ module.exports = {
   AWS_SECRET_ACCESS_KEY: process.env.AWS_SECRET_ACCESS_KEY || "",
   AWS_REGION: process.env.AWS_REGION || "",
   JWT_SECRET: process.env.JWT_SECRET || "",
-  MONGO_URI: process.env.MONGO_URI || ""
+  MONGO_URI: process.env.MONGO_URI || "",
+  RESEND_KEY: process.env.RESEND || "",
 };
