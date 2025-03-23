@@ -73,7 +73,7 @@ app.post("/api/verify-beta", async (req, res) => {
     // Validate Email Format
     if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
       return res
-        .status(400)
+        .status(203)
         .json({ success: false, message: "Invalid email format." });
     }
 
@@ -222,19 +222,19 @@ app.post("/api/verify-beta", async (req, res) => {
     <p>
       We’re delighted to have you with us! 
       <a href="https://uiblocks.xyz" class="highlight-link"><strong>UIblocks</strong></a> 
-      is here for ambitious developers, founders, and designers—making it fast and effortless to build stunning, responsive apps without losing creative control.
+      is here for ambitious developers, founders, and designers, who are making it fast and effortless to build stunning, responsive apps without losing creative control.
     </p>
     <p>
       We’re built to help you turn ideas into reality and remove the friction from bringing your vision to life.
     </p>
     <p>
-      You’re joining <strong>150+ passionate creators</strong> who are shaping the future of digital experiences. 
+      You’re joining <strong>150+ passionate devs, designers and founders</strong> who are shaping the future of digital experiences. 
       We can’t wait to see what you’ll create as we grow this journey together.
     </p>
     
     <p><span class="highlight">Next Steps:</span></p>
     <p>
-      We will soon send you the access details and instructions, check your inbox soon. 
+      We will send the access details and instructions straight to your inbox soon. 
       If you don’t see the email, please check your spam folder.
     </p>
     
@@ -277,7 +277,7 @@ app.post("/api/join-beta", async (req, res) => {
     // Email Validation
     if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
       return res
-        .status(400)
+        .status(203)
         .json({ success: false, message: "Invalid email format." });
     }
 
