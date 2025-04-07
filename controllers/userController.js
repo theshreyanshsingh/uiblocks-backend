@@ -381,7 +381,7 @@ exports.userData = async (req, res) => {
   try {
     const { email, provider } = req.body;
     let user = await User.findOne({ email });
-
+    console.log(email, provider, user);
     if (!user) {
       // Generate a unique 6-digit pubId
       let pubId;
