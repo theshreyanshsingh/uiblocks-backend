@@ -28,6 +28,4 @@ jobs:
 
             pm2 stop uiblocks-backend
 
-            npx tsc --build
-
-            pm2 start dist/index.js --name uiblocks-backend
+            pm2 start server.js --name uiblocks-backend
