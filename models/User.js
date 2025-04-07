@@ -5,24 +5,42 @@ const UserSchema = new mongoose.Schema(
   {
     name: {
       type: String,
-      required: true,
-      trim: true,
     },
     email: {
       type: String,
       required: true,
       unique: true,
       trim: true,
-      lowercase: true,
     },
-    password: {
-      type: String,
-      required: true,
+    subscription: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Subscription",
+    },
+    subscriptionIds: {
+      type: [String],
+      default: [],
     },
     plan: {
       type: String,
       default: "free",
-      enum: ["free", "premium", "enterprise"], 
+      enum: ["free", "scale", "unlimited"],
+    },
+    pubId: {
+      type: String,
+      required: true,
+      unique: true,
+      trim: true,
+    },
+    promptCount: { type: Number, default: 0 },
+    unlimitedPromptCount: { type: Number, default: 0 },
+    unlimitedPromptPacks: { type: Number, default: 0 },
+    lastPromptReset: { type: Date, default: Date.now },
+    subscriptionStatus: { type: String, default: "active" },
+    subscriptionStartDate: { type: Date },
+    subscriptionEndDate: { type: Date },
+    Sessions: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Session",
     },
     numberOfProjects: {
       type: Number,
@@ -32,12 +50,17 @@ const UserSchema = new mongoose.Schema(
       type: String,
       default: null,
     },
+    provider: {
+      type: String,
+      enum: ["github", "google", "email"],
+    },
     projects: [
       {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Project",
       },
     ],
+    deployments: { type: Number, default: 0 },
     createdAt: {
       type: Date,
       default: Date.now,

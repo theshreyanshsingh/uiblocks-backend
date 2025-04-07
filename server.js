@@ -1,4 +1,3 @@
-require("dotenv").config();
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
@@ -6,12 +5,14 @@ const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
 const Waitlist = require("./waitlist");
 const morgan = require("morgan");
-const userRoutes = require("./routes/userRoutes");
 const { MONGO_URI, PORT } = require("./config");
 const Beta = require("./models/BetaAccess");
 const Otps = require("./models/Otps");
-const { sendEmail } = require("./helpers/SendEmail");
 const { ResendEmail } = require("./helpers/Resend");
+
+const userRoutes = require("./routes/userRoutes");
+const projectRoutes = require("./routes/Project");
+const SubsRoutes = require("./routes/subscriptionRoutes");
 
 // Initialize Express App
 const app = express();
@@ -24,6 +25,8 @@ app.use(morgan("dev"));
 
 // Routes
 app.use("/api", userRoutes);
+app.use("/api", projectRoutes);
+app.use("/api", SubsRoutes);
 
 // Connect to MongoDB
 mongoose

@@ -7,11 +7,23 @@ const ProjectSchema = new mongoose.Schema(
     title: {
       type: String,
       required: true,
+    },
+    memory: {
+      type: String,
+    },
+    csslibrary: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    framework: {
+      type: String,
+      required: true,
       trim: true,
     },
     generatedName: {
       type: String,
-      default: () => crypto.randomBytes(8).toString("hex"), 
+      default: () => crypto.randomBytes(8).toString("hex"),
       unique: true,
     },
     owner: {
@@ -19,13 +31,21 @@ const ProjectSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
-    createdAt: {
-      type: Date,
-      default: Date.now,
+    url: {
+      type: String,
     },
+    lastResponder: { type: String, enum: ["user", "ai"] },
+    isResponseCompleted: { type: Boolean, default: false },
+    enh_prompt: String,
+    images: [String],
+    isPinned: { type: Boolean, default: false },
+    isPublic: { type: Boolean, default: true },
+    status: { type: String, default: "active", enum: ["active", "deleted"] },
   },
   { timestamps: true }
 );
+
+ProjectSchema.index({ generatedName: 1 }, { unique: true });
 
 // Create Model
 const Project = mongoose.model("Project", ProjectSchema);
