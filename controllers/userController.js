@@ -182,7 +182,7 @@ exports.verify = async (req, res) => {
       });
     }
     // Find user by email
-    const user = await User.findOne({ email: email.trim() });
+    let user = await User.findOne({ email: email.trim() });
 
     if (!user) {
       // Generate a unique 6-digit pubId
@@ -207,6 +207,7 @@ exports.verify = async (req, res) => {
       });
 
       await newUser.save();
+      user = newUser;
     }
 
     const sessionId = Math.floor(1000000000000 + Math.random() * 9000000000000);
