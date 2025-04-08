@@ -122,6 +122,100 @@ async function handleSubscriptionActive(user, subscriptionData) {
 
     await user.save();
     console.log(`Subscription activated for user: ${user.email}`);
+
+    // Send welcome email for scale plan subscription
+    await ResendEmail({
+      from: "noreply@uiblocks.xyz",
+      to: user.email,
+      subject: "Welcome to UIblocks Scale Plan!",
+      html: `<!DOCTYPE html>
+      <html lang="en">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style>
+          body {
+            background-color: #141414;
+            color: #ffffff;
+            font-family: 'Helvetica', 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+          }
+          .container {
+            max-width: 620px;
+            margin: 30px auto;
+            padding: 35px;
+            background-color: #141414;
+            border-radius: 12px;
+            border: 1px solid #2a2a2a;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+          }
+          .header {
+            font-size: 28px;
+            color: #ffffff;
+            margin: 0 0 25px;
+            font-weight: 300;
+            letter-spacing: 0.5px;
+          }
+          p {
+            font-size: 16px;
+            line-height: 1.7;
+            color: #ffffff;
+            margin: 0 0 20px;
+          }
+          .highlight {
+            color: #ffffff;
+            font-weight: bold;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 3px 10px;
+            border-radius: 5px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+          }
+          .details-box {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 8px;
+            margin: 15px 0;
+          }
+          .team {
+            font-style: italic;
+            color: #e0e0e0;
+            font-size: 15px;
+          }
+          .footer {
+            font-size: 13px;
+            color: #bbbbbb;
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #2a2a2a;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">Welcome to UIblocks Scale Plan!</div>
+          <p>Thank you for subscribing to our Scale Plan. </p>
+          <p>You've just unlocked unlimited creative possibilities and we're excited to see your ideas coming to life!</p>
+          <div class="details-box">
+            <p><strong>Your Subscription Details:</strong></p>
+            <p>• Plan: Scale</p>
+            <p>• Monthly Prompts: 200</p>
+            <p>• Start Date: ${new Date(
+              subscriptionData.currentPeriodStart
+            ).toLocaleDateString()}</p>
+            <p>• Next Billing Date: ${new Date(
+              subscriptionData.currentPeriodEnd
+            ).toLocaleDateString()}</p>
+          </div>
+          <p>Need help or have questions? Our support team is here for you! Just email us at <a href="mailto:support@uiblocks.xyz" style="color: #ffffff;">support@uiblocks.xyz</a></p>
+          <div class="footer">
+            © 2025 UIblocks. All rights reserved.
+          </div>
+        </div>
+      </body>
+      </html>`,
+    });
   } catch (error) {
     console.error("Error handling active subscription:", error);
   }
