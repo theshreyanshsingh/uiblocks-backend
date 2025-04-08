@@ -269,6 +269,7 @@ exports.reguser = async (req, res) => {
     let pubId;
 
     if (!user) {
+      console.log("2", user);
       // Generate a unique 6-digit pubId
       let isUnique = false;
 
@@ -304,9 +305,9 @@ exports.reguser = async (req, res) => {
     await newSession.save();
 
     // update user with session id
-    const updatedUser = await User.findOneAndUpdate(
-      { email: email.trim() },
-      { $set: { sessionId: sessionId, provider: provider, name } },
+    const updatedUser = await User.findByIdAndUpdate(
+      user._id,
+      { $set: { sessionId, provider, name } },
       { new: true }
     );
 
@@ -381,7 +382,7 @@ exports.userData = async (req, res) => {
   try {
     const { email, provider } = req.body;
     let user = await User.findOne({ email });
-    console.log(email, provider, user);
+
     if (!user) {
       // Generate a unique 6-digit pubId
       let pubId;
