@@ -135,6 +135,7 @@ exports.createProject = async (req, res) => {
         await user.save();
       }
 
+      console.log("4");
       return res.json({
         success: true,
         messages: [
