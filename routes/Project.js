@@ -10,6 +10,7 @@ const {
   saveMemory,
   getAllProjects,
   updateProject,
+  loadMoreMessages,
 } = require("../controllers/Projects");
 
 router.post("/build-project", createProject);
@@ -23,6 +24,9 @@ router.post("/get-all-projects", getAllProjects);
 
 //messages
 router.post("/get-messages", getMessages);
+
+//load more messages with pagination
+router.post("/load-more-messages", loadMoreMessages);
 
 //save messages
 router.post("/save-message", saveMessage);

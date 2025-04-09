@@ -547,3 +547,67 @@ exports.updateProject = async (req, res) => {
     });
   }
 };
+
+// Load more messages with pagination (20 messages per request)
+exports.loadMoreMessages = async (req, res) => {
+  try {
+    const { projectId, page = 0 } = req.body;
+    const limit = 20; // Number of messages per page
+    const skip = page * limit; // Calculate how many messages to skip
+
+    // Find the project
+    const project = await Project.findOne(
+      { generatedName: projectId, status: "active" },
+      { _id: 1 }
+    )
+      .lean()
+      .exec();
+
+    if (!project) {
+      return res.status(404).json({
+        success: false,
+        message: "Project not found!",
+      });
+    }
+
+    // Get total count of messages for this project
+    const totalMessages = await Message.countDocuments({
+      projectId: project._id,
+    });
+
+    // Fetch messages with pagination
+    const messages = await Message.find(
+      { projectId: project._id },
+      { _id: 0, __v: 0, projectId: 0 }
+    )
+      .sort({ createdAt: -1 }) // Newest first
+      .skip(skip)
+      .limit(limit)
+      .lean()
+      .exec();
+
+    if (messages.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No more messages found!",
+      });
+    }
+
+    // Calculate if there are more messages to load
+    const hasMore = totalMessages > skip + messages.length;
+
+    res.json({
+      success: true,
+      messages,
+      hasMore,
+      totalMessages,
+      currentPage: page,
+    });
+  } catch (error) {
+    console.error("Error loading more messages:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error. Please try again later.",
+    });
+  }
+};
