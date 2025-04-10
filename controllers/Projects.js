@@ -98,6 +98,7 @@ exports.createProject = async (req, res) => {
 
       const project = await Project.create({
         title: projectName,
+        originalInput: input,
         memory,
         csslibrary: cssLibrary,
         framework,

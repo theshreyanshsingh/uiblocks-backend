@@ -8,6 +8,9 @@ const ProjectSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    originalInput: {
+      type: String,
+    },
     memory: {
       type: String,
     },
