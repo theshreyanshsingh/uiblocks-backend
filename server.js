@@ -13,6 +13,9 @@ const { ResendEmail } = require("./helpers/Resend");
 const userRoutes = require("./routes/userRoutes");
 const projectRoutes = require("./routes/Project");
 const SubsRoutes = require("./routes/subscriptionRoutes");
+const AgentRoutes = require("./routes/agent");
+const Mails = require("./models/emails");
+const { MoonMail } = require("./helpers/MoonResend");
 
 // Initialize Express App
 const app = express();
@@ -26,6 +29,7 @@ app.use(morgan("dev"));
 // Routes
 app.use("/api", userRoutes);
 app.use("/api", projectRoutes);
+app.use("/api", AgentRoutes);
 app.use("/api", SubsRoutes);
 
 // Connect to MongoDB
@@ -268,6 +272,42 @@ app.post("/api/verify-beta", async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Server error. Please try again later.",
+    });
+  }
+});
+
+app.post("/api/moon-mail", async (req, res) => {
+  try {
+    const { from, to, cc, bcc, subject, body, html, attachments } = req.body;
+    await MoonMail({
+      from: from,
+      to: to,
+      subject: subject,
+      html: html,
+      cc,
+      bcc,
+      attachments,
+      body,
+    });
+
+    await Mails.create({
+      cc,
+      bcc,
+      to,
+      subject,
+      htmlContent: html,
+      from,
+      attachments,
+    });
+    // Success Response
+    res.json({
+      success: true,
+    });
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Moon Server error. Please try again later.",
     });
   }
 });

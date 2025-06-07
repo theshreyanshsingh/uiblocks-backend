@@ -17,4 +17,8 @@ module.exports = {
   AWS_SECRET_KEY: process.env.AWS_SECRET_KEY,
   BUCKET_URL: process.env.BUCKET_URL,
   CLOUDFRONTID: process.env.CLOUDFRONTID,
+  MODEL_API_KEY: process.env.MODEL_API_KEY,
+  MODEL_NAME: process.env.MODEL_NAME,
+  MODEL_API_POINT: process.env.MODEL_API_POINT,
+  RELICS_API_KEY: process.env.RELICS_API_KEY,
 };

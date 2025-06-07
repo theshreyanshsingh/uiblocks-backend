@@ -2,8 +2,372 @@ const { generateProjectDetails } = require("../helpers/AINames");
 const Project = require("../models/Project");
 const User = require("../models/User");
 const Message = require("../models/Message");
+const Plan = require("../models/Plan");
 const { s3, invalidateCloudFront } = require("../helpers/Aws");
 const { BUCKET_NAME, BUCKET_URL, CLOUDFRONTID } = require("../config");
+const Code = require("../models/Code");
+const { default: axios } = require("axios");
+const { generateDetails } = require("../helpers/oldagent");
+
+const file = [
+  {
+    file: "frontend/package.json",
+    code: `{
+  "name": "frontend",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "axios": "^1.6.2",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.15",
+    "@types/react-dom": "^18.2.7",
+    "@vitejs/plugin-react": "^4.0.0",
+    "autoprefixer": "^10.4.16",
+    "postcss": "^8.4.32",
+    "tailwindcss": "^3.4.1",
+    "typescript": "^5.0.2",
+    "vite": "^4.3.9"
+  }
+}`,
+  },
+  {
+    file: "frontend/vite.config.ts",
+    code: `import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+
+export default defineConfig({
+  plugins: [react()],
+  server: {
+    port: 3000,
+    proxy: {
+      '/api': {
+        target: 'http://localhost:7777',
+        changeOrigin: true
+      }
+    }
+  }
+})`,
+  },
+  {
+    file: "frontend/tsconfig.json",
+    code: `{
+  "compilerOptions": {
+    "target": "ES2020",
+    "useDefineForClassFields": true,
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "skipLibCheck": true,
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "jsx": "react-jsx",
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true
+  },
+  "include": ["src"],
+  "references": [{ "path": "./tsconfig.node.json" }]
+}`,
+  },
+  {
+    file: "frontend/tsconfig.node.json",
+    code: `{
+  "compilerOptions": {
+    "composite": true,
+    "skipLibCheck": true,
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "allowSyntheticDefaultImports": true
+  },
+  "include": ["vite.config.ts"]
+}`,
+  },
+  {
+    file: "frontend/tailwind.config.js",
+    code: `/** @type {import('tailwindcss').Config} */
+export default {
+  content: [
+    "./index.html",
+    "./src/**/*.{js,ts,jsx,tsx}",
+  ],
+  theme: {
+    extend: {},
+  },
+  plugins: [],
+}`,
+  },
+  {
+    file: "frontend/postcss.config.js",
+    code: `export default {
+  plugins: {
+    tailwindcss: {},
+    autoprefixer: {},
+  },
+}`,
+  },
+  {
+    file: "frontend/index.html",
+    code: `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TS Frontend + Backend</title>
+</head>
+<body class="bg-black text-white min-h-screen">
+  <div id="root"></div>
+  <script type="module" src="/src/main.tsx"></script>
+</body>
+</html>`,
+  },
+  {
+    file: "frontend/src/main.tsx",
+    code: `import React from 'react'
+import ReactDOM from 'react-dom/client'
+import App from './App'
+import './styles/globals.css'
+
+ReactDOM.createRoot(document.getElementById('root')!).render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
+)`,
+  },
+  {
+    file: "frontend/src/App.tsx",
+    code: `import { useState, useEffect } from 'react'
+import axios from 'axios'
+
+function App() {
+  const [message, setMessage] = useState<string>('Loading...')
+  
+  useEffect(() => {
+    const fetchMessage = async () => {
+      try {
+        const response = await axios.get('/api/hello')
+        setMessage(response.data.message)
+      } catch (error) {
+        console.error('Error fetching message:', error)
+        setMessage('Failed to connect to server')
+      }
+    }
+    
+    fetchMessage()
+  }, [])
+  
+  return (
+    <div className="flex flex-col items-center w-full min-h-screen p-8">
+      <header className="w-full mb-12 text-center">
+        <h1 className="text-4xl font-bold mb-4">TS Frontend + Backend</h1>
+      </header>
+      <main className="w-full max-w-3xl flex-1">
+        <div className="bg-gray-900 border border-gray-700 p-8 rounded-lg text-center">
+          <h2 className="text-2xl font-medium mb-4">Message from server:</h2>
+          <div className="text-3xl font-bold mt-4 p-4 bg-black border border-gray-600 rounded">
+            {message}
+          </div>
+        </div>
+      </main>
+    </div>
+  )
+}
+
+export default App`,
+  },
+  {
+    file: "frontend/src/styles/globals.css",
+    code: `@tailwind base;
+@tailwind components;
+@tailwind utilities;`,
+  },
+  {
+    file: "frontend/src/vite-env.d.ts",
+    code: `/// <reference types="vite/client" />`,
+  },
+  {
+    file: "backend/package.json",
+    code: `{
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "Express TypeScript Backend",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "ts-node-dev --respawn --transpile-only src/index.ts"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "helmet": "^7.1.0",
+    "morgan": "^1.10.0"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.13",
+    "@types/express": "^4.17.17",
+    "@types/morgan": "^1.9.4",
+    "@types/node": "^20.2.5",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.1.3"
+  }
+}`,
+  },
+  {
+    file: "backend/tsconfig.json",
+    code: `{
+  "compilerOptions": {
+    "target": "es2018",
+    "module": "commonjs",
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "**/*.test.ts"]
+}`,
+  },
+  {
+    file: "backend/src/index.ts",
+    code: `import express, { Request, Response } from 'express';
+import cors from 'cors';
+import helmet from 'helmet';
+import morgan from 'morgan';
+
+// Initialize Express app
+const app = express();
+const PORT = 7777;
+
+// Middleware
+app.use(express.json());
+app.use(cors());
+app.use(helmet());
+app.use(morgan('dev'));
+
+// Routes
+app.get('/api/hello', (req: Request, res: Response) => {
+  res.json({ message: 'Hello from the backend!' });
+});
+
+// Add a root route to handle the 404 issue
+app.get('/', (req: Request, res: Response) => {
+  res.json({ message: 'Backend API is running. Use /api/hello to get data.' });
+});
+
+// Start server
+app.listen(PORT, () => {
+  console.log(\`Server running on port \${PORT}\`);
+  console.log(\`API endpoint available at http://localhost:\${PORT}/api/hello\`);
+});`,
+  },
+  {
+    file: "backend/.gitignore",
+    code: `node_modules
+dist
+.env`,
+  },
+];
+
+async function processImageData(urls) {
+  if (!urls || (Array.isArray(urls) && urls.length === 0)) {
+    return [];
+  }
+
+  const imageParts = [];
+  const urlArray = Array.isArray(urls) ? urls : [urls];
+  let mimeType;
+  for (const url of urlArray) {
+    if (!url || typeof url !== "string") {
+      console.warn(`Skipping invalid image URL: ${url}`);
+      continue;
+    }
+    try {
+      const response = await axios.get(url, { responseType: "arraybuffer" }); // Use axios.get with arraybuffer
+      const contentType = response.headers["content-type"];
+      if (!contentType || !contentType.startsWith("image/")) {
+        const extension = url.split(".").pop()?.toLowerCase();
+        let inferredMimeType;
+        switch (extension) {
+          case "jpg":
+          case "jpeg":
+            inferredMimeType = "image/jpeg";
+            break;
+          case "png":
+            inferredMimeType = "image/png";
+            break;
+          case "webp":
+            inferredMimeType = "image/webp";
+            break;
+          case "gif":
+            inferredMimeType = "image/gif";
+            break;
+          default:
+            console.warn(
+              `Could not determine valid image MIME type for ${url}. Content-Type: ${contentType}. Skipping.`
+            );
+            continue;
+        }
+        mimeType = inferredMimeType;
+      } else {
+        mimeType = contentType;
+      }
+
+      const imageBuffer = response.data; // Axios response.data is the arraybuffer
+      const base64Data = Buffer.from(imageBuffer).toString("base64");
+
+      imageParts.push({
+        base64Data,
+      });
+    } catch (error) {
+      console.error(`Error processing image URL ${url}:`, error);
+    }
+  }
+
+  return imageParts;
+}
+
+const f = async () => {
+  const code = await Code.create({
+    projectId: "eqkz8com-3xkahdxp-wlejoa5d-f4m4onp1",
+    user: "theshreyanshsingh7@gmail.com",
+    files: file,
+  });
+};
+
+const wipe = async () => {
+  const me = await Message.deleteMany({
+    projectId: "67f5f0acd591a8d896416b3d",
+  });
+};
+
+const a = async () => {
+  const text = await generateDetails({
+    input: "build a flappy bird clone",
+    images: [],
+    memory: "diff theme",
+  });
+  const cleanedText = text
+    .replace(/```json/g, "")
+    .replace(/```/g, "")
+    .trim();
+
+  const parsed = JSON.parse(cleanedText);
+  console.log("t", parsed);
+};
 
 exports.createProject = async (req, res) => {
   try {
@@ -35,6 +399,16 @@ exports.createProject = async (req, res) => {
         .lean()
         .exec();
 
+      const plan = await Plan.findOne({
+        projectId: existingProject._id,
+        user: user._id,
+      }).sort({ createdAt: -1 });
+
+      const code = await Code.findOne({
+        projectId: projectId,
+        user: owner,
+      });
+
       if (existingProject.url) {
         return res.json({
           success: true,
@@ -52,6 +426,8 @@ exports.createProject = async (req, res) => {
           promptCount: user.promptCount,
           plan: user.plan,
           id: user.pubId,
+          plan,
+          code: code && code.files.length > 0 ? code.files : [],
         });
       } else {
         return res.json({
@@ -74,11 +450,20 @@ exports.createProject = async (req, res) => {
       }
     } else {
       //name of project
-      const text = await generateProjectDetails({
+      const text = await generateDetails({
         input,
-        data: images,
+        images,
         memory,
+        cssLib: cssLibrary,
+        framework,
       });
+
+      const cleanedText = text
+        .replace(/```json/g, "")
+        .replace(/```/g, "")
+        .trim();
+
+      const parsed = JSON.parse(cleanedText);
 
       const {
         projectName,
@@ -87,7 +472,7 @@ exports.createProject = async (req, res) => {
         features,
         memoryEnhancement,
         theme,
-      } = text;
+      } = parsed;
 
       const prompt = {
         summary,
@@ -136,7 +521,6 @@ exports.createProject = async (req, res) => {
         await user.save();
       }
 
-      console.log("4");
       return res.json({
         success: true,
         messages: [
@@ -610,5 +994,131 @@ exports.loadMoreMessages = async (req, res) => {
       success: false,
       message: "Server error. Please try again later.",
     });
+  }
+};
+
+// savemessage helper
+exports.saveMessageHelper = async ({
+  projectId,
+  email,
+  text,
+  role,
+  image,
+  plan,
+}) => {
+  try {
+    const project = await Project.findOne({
+      generatedName: projectId,
+      status: "active",
+    });
+    const user = await User.findOne({ email });
+    if (!project || !user) {
+      return res.status(404).json({
+        success: false,
+        message: "Project or User not found.",
+      });
+    }
+
+    if (project.owner.toString() !== user._id.toString()) {
+      return res.status(403).json({
+        success: false,
+        message: "You are not authorized to save messages for this project.",
+      });
+    }
+
+    // save message
+    const message = await Message.create({
+      text,
+      role,
+      projectId: project._id,
+      user: user._id,
+      images: image,
+    });
+    //save plan
+    if (plan) {
+      const cleaned = plan
+        .replace(/___start___/, "")
+        .replace(/___end___/, "")
+        .trim();
+
+      const urlMatch = cleaned.match(/"url":\s*"([^"]+)"/);
+
+      if (urlMatch) {
+        const img = await processImageData(urlMatch[1]);
+
+        const newplan = new Plan({
+          text: plan,
+          role,
+          projectId: project._id,
+          user: user._id,
+          images: image,
+          ImagetoClone: JSON.stringify(img),
+        });
+        await newplan.save();
+      } else {
+        const newplan = new Plan({
+          text: plan,
+          role,
+          projectId: project._id,
+          user: user._id,
+          images: image,
+        });
+        await newplan.save();
+      }
+    }
+    //udpating the prompt count
+    if (user.promptCount > 0) {
+      user.promptCount = user.promptCount - 1;
+      await user.save();
+    }
+
+    if (role === "user") {
+      await Project.findByIdAndUpdate(project._id, {
+        $set: {
+          lastResponder: "user",
+        },
+      });
+    } else {
+      await Project.findByIdAndUpdate(project._id, {
+        $set: {
+          lastResponder: "ai",
+        },
+      });
+    }
+
+    return true;
+  } catch (error) {
+    console.log(error, "issues while saving");
+    return false;
+  }
+};
+
+exports.saveCode = async (req, res) => {
+  const { projectId, userId, file, code } = req.body;
+
+  try {
+    if (!projectId || !userId || !file || !code) {
+      return res.status(400).json({ message: "Missing required fields." });
+    }
+
+    const existingCode = await Code.findOne({ user: userId, projectId });
+
+    if (existingCode) {
+      console.log("Adding file to existing project");
+      existingCode.files.push({ file, code });
+      await existingCode.save();
+      return res.status(200).json({ message: "Code saved successfully." });
+    } else {
+      console.log("Creating new code entry for project");
+      await Code.create({
+        projectId,
+        user: userId,
+        files: [{ file, code }],
+      });
+      return res.status(201).json({ message: "Code created successfully." });
+    }
+  } catch (error) {
+    console.error("Error while saving code:", error);
+    return res.status(500).json({ message: "Internal server error." });
   }
 };

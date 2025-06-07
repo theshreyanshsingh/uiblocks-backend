@@ -11,6 +11,7 @@ const {
   getAllProjects,
   updateProject,
   loadMoreMessages,
+  saveCode,
 } = require("../controllers/Projects");
 
 router.post("/build-project", createProject);
@@ -18,6 +19,9 @@ router.post("/build-project", createProject);
 router.get("/get-project", getProject);
 
 router.post("/get-presigned-url", presigned);
+
+//saving code or file
+router.post("/save-code", saveCode);
 
 //get all projects
 router.post("/get-all-projects", getAllProjects);
