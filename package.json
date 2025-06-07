@@ -11,17 +11,12 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "@ai-sdk/google": "^1.2.3",
-    "@google/genai": "^0.6.1",
-    "@google/generative-ai": "^0.24.0",
     "@langchain/community": "^0.3.41",
     "@langchain/core": "^0.3.49",
     "@langchain/langgraph": "^0.2.67",
     "@langchain/openai": "^0.5.7",
-    "ai": "^4.2.6",
     "aws-sdk": "^2.1692.0",
     "axios": "^1.9.0",
-    "bcrypt": "^5.1.1",
     "body-parser": "^1.20.3",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
@@ -31,7 +26,6 @@
     "mongoose": "^8.12.1",
     "morgan": "^1.10.0",
     "nodemon": "^3.1.9",
-    "puppeteer": "^24.4.0",
     "resend": "^4.1.2"
   }
 }
